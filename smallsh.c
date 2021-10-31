@@ -1,6 +1,10 @@
 #include <stdio.h>
 
 int main() {
-	printf("smallsh WIP.\n");
-	return 0;
+	char userInput[2048];
+
+	while (1) {
+		printf(": ");
+		scanf("%s", userInput);
+	}
 }
