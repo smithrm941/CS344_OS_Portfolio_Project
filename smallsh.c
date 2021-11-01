@@ -3,12 +3,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
-
+#include <sys/types.h>
 
 int main() {
 	char userInput[2048];
 	char cwd[256];
 	int status;
+	pid_t spawnpid = -5;
 
 	struct userCommand
 	{
@@ -56,6 +57,12 @@ int main() {
 			status = 0;
 			printf("exit value %d\n", status);
 			exit(0);
+		}
+		else {
+			spawnpid = fork();
+			if (spawnpid == 0) {
+				printf("place holder for executing other commands!\n");
+			}
 		}
 	}
 
