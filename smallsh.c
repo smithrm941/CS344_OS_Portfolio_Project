@@ -9,6 +9,7 @@ int main() {
 	char userInput[2048];
 	char cwd[256];
 	int status;
+	char* newDirectory;
 	pid_t spawnpid = -5;
 
 	struct userCommand
@@ -40,15 +41,14 @@ int main() {
 			token = strtok(NULL, " ");
 			// if a directory is chosen:
 			while (token != NULL) {
-				printf("the token: %s\n", token);
+				newDirectory = token;
+				chdir(newDirectory);
 				token = strtok(NULL, " ");
+				main();
 			} 
 			// if cd is typed without chosen directory:
 			    getcwd(cwd, 256);
-			    //printf("current directory: %s\n", getcwd(cwd, 256));
-				//printf("home directory is: %s\n", getenv("HOME")); 
 				chdir(getenv("HOME"));
-				//printf("current directory: %s\n", getcwd(cwd, 256));
 		}
 
 		else if (strcmp(token, "status") == 0) {
