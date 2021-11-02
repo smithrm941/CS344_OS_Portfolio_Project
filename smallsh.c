@@ -77,12 +77,31 @@ int main() {
 		}
 		else {
 
+			// get the value of the command to run:
+
 			while (token != NULL) {
 				// PLACEHOLDER - execvp, child process stuff etc here:
 				printf("getting everything typed: %s\n", token);
 				token = strtok(NULL, " ");
-
 			}
+
+			// take the argument without the < or > or & as command to run
+			spawnpid = fork();
+			switch (spawnpid) {
+			case -1:
+				// perror
+			}
+			case 0:
+				// execlp to run chosen command
+				// perror
+				// exit(EXIT_FAILURE)
+			case 1:
+				// child exits?
+
+
+			// or take argument with < or > for redirect
+			// or & and do that stuff
+
 		}
 	}
 
