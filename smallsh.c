@@ -6,15 +6,19 @@
 #include <sys/types.h>
 #include <signal.h>
 
+#define MAXCMDLINE 2049 // to account for the null char
+#define MAXARGS 512
+
 void handle_SIGINT(int signo) {
 	printf("\n");
 }
 
 int main() {
-	char userInput[2048];
-	char cwd[256];
-	int status;
-	char* newDirectory;
+	// help with userInput code via Painless Programming: https://youtu.be/gnIxlT_40rU
+	char userInput[MAXARGS];
+	char cwd[256]; // var to hold current working directory
+	int status; // var for exit status
+	char* newDirectory; // var for usr chosen directory
 	pid_t spawnpid = -5;
 
 	// from signal handling API module - ignoring CTRL C
@@ -35,69 +39,69 @@ int main() {
 	};
 
 
+
+
 	while (1) {
 		// struct userCommand* currVal = malloc(sizeof(struct userCommand));
 
 		// getting user input and either use built in commands or pass it to variables that will determine input thingy, output thingy, or regular command: 
 		printf(": ");
-		scanf("%[^\n]%*c", userInput);
+		char* token;
+		token = strtok(userInput, " ");
 
-		// PLACEHOLDER - fix repeating prompt after blank line
+		// use fgets to fill the argument array:
+		fgets(userInput, MAXCMDLINE, stdin);
+
 		// ignore blank lines
-		if (userInput[0] == '\0') {
+		if (strncmp(userInput, " ", strlen(userInput)-1) == 0) {
 			continue;
 		}
 
 		// ignore comment lines
-		if (userInput[0] == '#'){
+		else if (strncmp(userInput, "#", strlen(userInput) -1) == 0){
 			continue;
 		}
 
-		// user command is first argument user typed:
-		char* token;
-		token = strtok(userInput, " ");
-		
-		// exit smallsh if command is 'exit':
-		if (strcmp(token, "exit") == 0) {
+		// exit shell if user types "exit"
+		else if (strncmp(userInput, "exit", strlen(userInput) - 1) == 0) {
 			exit(0);
 		}
-		// if the first argument is 'cd' either change directory to chosen directory
-		// or home if no directory is chosen:
-		else if (strcmp(token, "cd") == 0) {
-			token = strtok(NULL, " ");
-			// if a directory is chosen:
-			while (token != NULL) {
-				if (chdir(token) == 0) {
-					printf("pwd: %s\n", getcwd(cwd, 256));
-					token = strtok(NULL, " ");
-					main();
-				}
-				else {
-					printf("Directory not found\n");
-				}
-				main();
-			} 
-			// if cd is typed without chosen directory:
-			    getcwd(cwd, 256);
-				chdir(getenv("HOME"));
-				printf("pwd: %s\n", getcwd(cwd, 256));
-		}
 
-		else if (strcmp(token, "status") == 0) {
+		// print status value if user types "status"
+		else if (strncmp(userInput, "status", strlen(userInput) - 1) == 0) {
 			// PLACEHOLDER - signal of last terminating process here
 			// otherwise if before any foreground process is run:
 			status = 0;
 			printf("exit value %d\n", status);
 			fflush(stdin);
 		}
+		
+		// handling everything else other than blank lines, "exit" and "status":
 		else {
+			token = strtok(userInput, " ");
+
 
 			while (token != NULL) {
 				printf("getting everything typed: %s\n", token);
+				if (strncmp(token, "cd", strlen(token) - 1) == 0) {
+					if (chdir(token) == 0) {
+						printf("pwd: %s\n", getcwd(cwd, 256));
+						token = strtok(NULL, " ");
+						main();
+					}
+					else {
+						printf("Directory not found\n");
+					}
+					// if cd is typed without chosen directory:
+					getcwd(cwd, 256);
+					chdir(getenv("HOME"));
+					printf("printing this one? pwd: %s\n", getcwd(cwd, 256));
+				}
+
 				// take each of these tokens and if no symbol then add to argument array
 				// otherwise make if < then add to input file variable or with > make outputfile or & (background??) 
-				token = strtok(NULL, " ");
 				// then continue???
+				token = strtok(NULL, " ");
 			}
 
 		}
