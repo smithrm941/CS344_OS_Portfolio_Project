@@ -23,8 +23,9 @@ int main() {
 	sigfillset(&SIGINT_action.sa_mask);
 	SIGINT_action.sa_flags = 0;
 	sigaction(SIGINT, &SIGINT_action, NULL);
-	sigaction(SIGQUIT, &SIGINT_action, NULL);
+	//sigaction(SIGQUIT, &SIGINT_action, NULL);
 
+	// make these variables without the struct stuff:
 	struct userCommand
 	{
 		char* command;
@@ -35,8 +36,9 @@ int main() {
 
 
 	while (1) {
-		struct userCommand* currVal = malloc(sizeof(struct userCommand));
+		// struct userCommand* currVal = malloc(sizeof(struct userCommand));
 
+		// getting user input and either use built in commands or pass it to variables that will determine input thingy, output thingy, or regular command: 
 		printf(": ");
 		scanf("%[^\n]%*c", userInput);
 
@@ -90,34 +92,41 @@ int main() {
 		}
 		else {
 
-			// get the value of the command to run:
-
 			while (token != NULL) {
-				// PLACEHOLDER - execvp, child process stuff etc here:
 				printf("getting everything typed: %s\n", token);
+				// take each of these tokens and if no symbol then add to argument array
+				// otherwise make if < then add to input file variable or with > make outputfile or & (background??) 
 				token = strtok(NULL, " ");
-				// use this to determine if normal command, redirect, or background process?
+				// then continue???
 			}
-
-			// take the argument without the < or > or & as command to run
-			/*spawnpid = fork();
-			switch (spawnpid) {
-			case -1:
-				// perror
-			}
-			case 0:
-				// execlp to run chosen command
-				// perror
-				// exit(EXIT_FAILURE)
-			case 1:
-				// child exits?
-
-
-			// or take argument with < or > for redirect
-			// or & and do that stuff*/
 
 		}
 	}
+
+
+	// PLACEHOLDER - function with execvp, child process stuff etc here:
+	// take the values from the command array, input file, output file 
+
+	/*spawnpid = fork();
+	switch (spawnpid) {
+	case -1:
+		// perror
+	}
+	case 0:
+		// this means the fork was ok so execute command
+		// take the array with the arguments and use in execlp?
+		// execlp to run chosen command
+		// execlp (token, token,
+		// perror
+		// exit(EXIT_FAILURE)
+	case 1:
+		// child exits?
+
+
+	// or take argument with < or > for redirect
+	// or & and do that stuff*/
+
+
 
 	
 }
