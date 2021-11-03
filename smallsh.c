@@ -42,7 +42,6 @@ int main() {
 
 
 	while (1) {
-		// struct userCommand* currVal = malloc(sizeof(struct userCommand));
 
 		// getting user input and either use built in commands or pass it to variables that will determine input thingy, output thingy, or regular command: 
 		printf(": ");
@@ -52,13 +51,13 @@ int main() {
 		// use fgets to fill the argument array:
 		fgets(userInput, MAXCMDLINE, stdin);
 
-		// ignore blank lines
-		if (strncmp(userInput, " ", strlen(userInput)-1) == 0) {
+		// ignore comment lines
+		if (userInput[0] == '#')  {
 			continue;
 		}
 
-		// ignore comment lines
-		else if (strncmp(userInput, "#", strlen(userInput) -1) == 0){
+		// ignore blank lines
+		if (strncmp(userInput, " ", strlen(userInput)-1) == 0) {
 			continue;
 		}
 
@@ -76,33 +75,49 @@ int main() {
 			fflush(stdin);
 		}
 		
-		// handling everything else other than blank lines, "exit" and "status":
+		// handling everything else other than blank lines, comments, "exit" and "status":
 		else {
+			
+			// breaking user input into tokens seperated by space
 			token = strtok(userInput, " ");
-
-
 			while (token != NULL) {
-				printf("getting everything typed: %s\n", token);
+				
+				// built-in function for changing directory within smallsh:
+
 				if (strncmp(token, "cd", strlen(token) - 1) == 0) {
-					if (chdir(token) == 0) {
-						printf("pwd: %s\n", getcwd(cwd, 256));
-						token = strtok(NULL, " ");
-						main();
+					// if next token is not NULL, try to go to that directory:
+					token = strtok(NULL, " ");
+					while (token != NULL) {
+
+						// remove trailing new line from before passing token to chdir:
+						// code found on stack overflow:
+						token[strlen(token) - 1] = 0;
+
+						chdir(token);
+						printf("this should be blablah/vsprojects: %s\n", getcwd(cwd, 256));
+						if (chdir(token) == 0) {
+							printf("pwd: %s\n", getcwd(cwd, 256));
+							token = strtok(NULL, " ");
+							main();
+						}
+						else {
+							printf("what is the token now? %s", token);
+							printf("Directory not found\n");
+							main();
+						}
 					}
-					else {
-						printf("Directory not found\n");
-					}
-					// if cd is typed without chosen directory:
-					getcwd(cwd, 256);
+					// if cd is typed without chosen directory, go to the home directory:
 					chdir(getenv("HOME"));
 					printf("printing this one? pwd: %s\n", getcwd(cwd, 256));
+					main();
 				}
 
 				// take each of these tokens and if no symbol then add to argument array
 				// otherwise make if < then add to input file variable or with > make outputfile or & (background??) 
 				// then continue???
-				token = strtok(NULL, " ");
 			}
+			token = strtok(NULL, " ");
+
 
 		}
 	}
