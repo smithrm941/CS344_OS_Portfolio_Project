@@ -4,6 +4,11 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <signal.h>
+
+void handle_SIGINT(int signo) {
+	printf("\n");
+}
 
 int main() {
 	char userInput[2048];
@@ -11,6 +16,14 @@ int main() {
 	int status;
 	char* newDirectory;
 	pid_t spawnpid = -5;
+
+	// from signal handling API module - ignoring CTRL C
+	struct sigaction SIGINT_action = { 0 };
+	SIGINT_action.sa_handler = handle_SIGINT;
+	sigfillset(&SIGINT_action.sa_mask);
+	SIGINT_action.sa_flags = 0;
+	sigaction(SIGINT, &SIGINT_action, NULL);
+	sigaction(SIGQUIT, &SIGINT_action, NULL);
 
 	struct userCommand
 	{
@@ -83,10 +96,11 @@ int main() {
 				// PLACEHOLDER - execvp, child process stuff etc here:
 				printf("getting everything typed: %s\n", token);
 				token = strtok(NULL, " ");
+				// use this to determine if normal command, redirect, or background process?
 			}
 
 			// take the argument without the < or > or & as command to run
-			spawnpid = fork();
+			/*spawnpid = fork();
 			switch (spawnpid) {
 			case -1:
 				// perror
@@ -100,7 +114,7 @@ int main() {
 
 
 			// or take argument with < or > for redirect
-			// or & and do that stuff
+			// or & and do that stuff*/
 
 		}
 	}
