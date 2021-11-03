@@ -50,23 +50,27 @@ void gettingInput() {
 		// use fgets to fill the argument variable with user inputs:
 		fgets(userInput, MAXCMDLINE, stdin);
 
+		// remove trailing new line from before passing token to chdir:
+		// code found on stack overflow:
+		userInput[strlen(userInput) - 1] = 0;
+
 		// ignore comment lines
 		if (userInput[0] == '#') {
 			continue;
 		}
 
 		// ignore blank lines
-		if (strncmp(userInput, " ", strlen(userInput) - 1) == 0) {
+		if (strcmp(userInput, " ") == 0) {
 			continue;
 		}
 
 		// exit shell if user types "exit"
-		else if (strncmp(userInput, "exit", strlen(userInput) - 1) == 0) {
+		else if (strcmp(userInput, "exit") == 0) {
 			exit(0);
 		}
 
 		// print status value if user types "status"
-		else if (strncmp(userInput, "status", strlen(userInput) - 1) == 0) {
+		else if (strcmp(userInput, "status") == 0) {
 			// PLACEHOLDER - signal of last terminating process here
 			// otherwise if before any foreground process is run:
 			status = 0;
@@ -76,19 +80,16 @@ void gettingInput() {
 
 		// handling everything else other than blank lines, comments, "exit" and "status":
 		else {
+
 			// breaking user input into tokens seperated by space
 			token = strtok(userInput, " ");
 			while (token != NULL) {
 
 				// built-in function for changing directory within smallsh:
-				if (strncmp(token, "cd", strlen(token) - 1) == 0) {
+				if (strcmp(token, "cd") == 0) {
 					// if user types another word beisdes cd, try to go to directory with that name:
 					token = strtok(NULL, " ");
 					while (token != NULL) {
-
-						// remove trailing new line from before passing token to chdir:
-						// code found on stack overflow:
-						token[strlen(token) - 1] = 0;
 
 						// move to chosen directory or print error message:
 						if (chdir(token) == 0) {
@@ -112,9 +113,22 @@ void gettingInput() {
 					//token = strtok(NULL, " ");
 					while (token != NULL) {
 						printf("what is the current token? %s\n", token);
+						if (strcmp(token, "<") == 0) {
+							printf("next one is input file!\n");
+							token = strtok(NULL, " ");
+							printf("the input file: %s\n", token);
+						}
+						else if (strcmp(token, ">")  == 0) {
+							printf("next one is output file!\n");
+							token = strtok(NULL, " ");
+							printf("the output file: %s\n", token);
+						}
+						else {
+							printf("just a command!\n");
+							printf("the command: %s\n", token);
+						}
+						
 						token = strtok(NULL, " ");
-						// remove trailing new line from token:
-						//token[strlen(token) - 1] = 0;
 						
 					}
 
