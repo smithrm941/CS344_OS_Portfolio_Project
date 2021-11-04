@@ -88,7 +88,8 @@ struct userCommands processInput(void) {
 		}
 
 		// ignore blank lines
-		if (strcmp(userInput, " ") == 0) {
+		if (strcmp(userInput, "") == 0) {
+			printf("");
 			continue;
 		}
 
@@ -142,12 +143,11 @@ struct userCommands processInput(void) {
 					int i;
 					for (i = 0; i < MAXARGS; i++) {
 						currentCommands.regularCommands[i] = NULL;
-						printf("did this work?? %s\n", currentCommands.regularCommands[i]);
 					}
 
 					//token = strtok(NULL, " ");
 					while (token != NULL) {
-						printf("what is the current token? %s\n", token);
+						//printf("what is the current token? %s\n", token);
 						if (strcmp(token, "<") == 0) {
 							printf("next one is input file!\n");
 							token = strtok(NULL, " ");
@@ -161,9 +161,8 @@ struct userCommands processInput(void) {
 							printf("the output file: %s\n", currentCommands.outputFile);
 						}
 						else {
-							printf("just a command!\n");
+						//	printf("just a command!\n");
 							currentCommands.regularCommands[currentCommands.commandCount] = token;
-							printf("the command: %s\n", currentCommands.regularCommands[currentCommands.commandCount]);
 							currentCommands.commandCount++;
 						}
 						
@@ -183,8 +182,7 @@ struct userCommands processInput(void) {
 void executeCommand(struct userCommands theCommands) {
 	// executing a program module:
 	int childStatus;
-	// filler until I get my commands working:
-	char* argument_list[] = { "ls", "-l", NULL };
+
 	// fork new process
 	pid_t spawnPid = fork();
 
@@ -194,25 +192,20 @@ void executeCommand(struct userCommands theCommands) {
 		exit(1);
 		break;
 	case 0:
-		// replace current program with user's command
-		//execvp ? ? for theCommands.regularCommands[0];
-		//execl(theCommands.regularCommands[0], theCommands.regularCommands[0], NULL);
-		//execvp(theCommands.regularCommands[0], theCommands.regularCommands);
+		if (theCommands.inputFile[0] != '\0') {
+			printf("we have an input file!\n");
+			// from prcesses and I/O module
+		}
+		else if (theCommands.outputFile[0] != '\0') {
+			printf("we have an output file!\n");
+		}
 		execvp(theCommands.regularCommands[0], theCommands.regularCommands);
+		//fflush(stdout);
 	default:
 		// in parent process, wait for child's termination:
 		spawnPid = waitpid(spawnPid, &childStatus, 0);
-		printf("PARENT(%d): child(%d) terminated. Exiting\n", getpid(), spawnPid);
-		exit(0);
-		break;
+		// something about signals here?
+		//printf("PARENT(%d): child(%d) terminated. Exiting\n", getpid(), spawnPid);
+		main();
 	}
-	/*while (1) {
-		printf("accessing the struct? Input: %s\n", theCommands.inputFile);
-		printf("accessing the struct? Output: %s\n", theCommands.outputFile);
-		int i;
-		for (i = 0; i < theCommands.commandCount; i++) {
-			printf("accessing the struct? Commands: %s\n", theCommands.regularCommands[i]);
-		}
-		break;
-	}*/
 }
