@@ -13,8 +13,9 @@ void handle_SIGINT(int signo) {
 	printf("\n");
 }
 
-// help with gettingInput code via Painless Programming: https://youtu.be/gnIxlT_40rU
-void gettingInput();
+// help with processInput code via Painless Programming: https://youtu.be/gnIxlT_40rU
+void processInput();
+void executeCommand();
 
 
 int main() {
@@ -28,19 +29,35 @@ int main() {
 
 
 	char command[256];
-	char inputFile[256];
-	char outputFile[256];
 	char backgroundProcess[256];
 
-	gettingInput();
+	processInput();
+	executeCommand();
 		
 }
 
-void gettingInput() {
-	while (1) {
+void processInput() {
+	int processingInput = 1;
+	while (processingInput == 1) {
 		printf(": ");
 
 		char userInput[MAXARGS];
+
+		struct userCommands {
+			char inputFile[256];
+			char outputFile[256];
+			char regularCommands[512][256];
+		};
+
+		// declaring a struct to hold our variables to pass to command execution function:
+		struct userCommands currentCommands;
+		// ******************************************************************************
+
+		char inputFile[256];
+		char outputFile[256];
+		int commandCount = 0;
+		char regularCommands[512][256];
+
 		char cwd[256]; // var to hold current working directory
 		int status; // var for exit status
 		char* newDirectory; // var for usr chosen directory
@@ -116,31 +133,40 @@ void gettingInput() {
 						if (strcmp(token, "<") == 0) {
 							printf("next one is input file!\n");
 							token = strtok(NULL, " ");
-							printf("the input file: %s\n", token);
+							strcpy(currentCommands.inputFile, token);
+							printf("the input file: %s\n", currentCommands.inputFile);
 						}
 						else if (strcmp(token, ">")  == 0) {
 							printf("next one is output file!\n");
 							token = strtok(NULL, " ");
-							printf("the output file: %s\n", token);
+							strcpy(currentCommands.outputFile, token);
+							printf("the output file: %s\n", currentCommands.outputFile);
 						}
 						else {
 							printf("just a command!\n");
-							printf("the command: %s\n", token);
+							strcpy(currentCommands.regularCommands[commandCount], token);
+							printf("the command: %s\n", currentCommands.regularCommands[commandCount]);
+							commandCount++;
 						}
 						
 						token = strtok(NULL, " ");
 						
 					}
-
-					// check for & becomes background process
-					// check for < becomes input_file variable   
-					// check for > becomes output_file variable
-					// check for $$ becomes process id of smallsh
-					// others: become part of command array
 					
 				}
 			}
 			token = strtok(NULL, " ");
 		}
+		processingInput = 0;
+
+	}
+}
+
+void executeCommand() {
+	while (1) {
+		printf("command stuff goes here\n");
+		printf("and here");
+		printf("here too!");
+		break;
 	}
 }
