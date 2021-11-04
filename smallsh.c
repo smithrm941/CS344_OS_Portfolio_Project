@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <fcntl.h>
 
 #define MAXCMDLINE 2049
 #define MAXARGS 513
@@ -19,6 +20,7 @@ struct userCommands {
 	char outputFile[256];
 	char* regularCommands[MAXARGS];
 	int commandCount;
+	int backgroundProcess;
 	//int i;
 /*	for (i = 0; i < userCommands.commandCount; i++) {
 		userCommands.regularCommands[i] = 0;
@@ -160,6 +162,11 @@ struct userCommands processInput(void) {
 							strcpy(currentCommands.outputFile, token);
 							printf("the output file: %s\n", currentCommands.outputFile);
 						}
+						else if (strcmp(token, "&") == 0) {
+							printf("do the background thing!");
+							currentCommands.backgroundProcess = 1;
+							token = strtok(NULL, " ");
+						}
 						else {
 						//	printf("just a command!\n");
 							currentCommands.regularCommands[currentCommands.commandCount] = token;
@@ -194,10 +201,40 @@ void executeCommand(struct userCommands theCommands) {
 	case 0:
 		if (theCommands.inputFile[0] != '\0') {
 			printf("we have an input file!\n");
-			// from prcesses and I/O module
+			// code from prcesses and I/O module
+			int sourceFD = open(theCommands.inputFile, O_RDONLY);
+			if (sourceFD == -1) {
+				perror("source open()");
+				exit(1);
+			}
+			// Written to terminal
+			printf("sourceFD == %d\n", sourceFD);
+
+			// Redirect stdin to source file
+			int result = dup2(sourceFD, 0);
+			if (result == -1) {
+				perror("source dup2()");
+				exit(2);
+			}
 		}
-		else if (theCommands.outputFile[0] != '\0') {
+		
+		if (theCommands.outputFile[0] != '\0') {
 			printf("we have an output file!\n");
+			// code from processes and I/O module
+			int targetFD = open(theCommands.outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+			if (targetFD == -1) {
+				perror("target open()");
+				exit(1);
+			}
+			printf("targetFD == %d\n", targetFD); // written to terminal
+
+			// Redirect stdout to target file
+			int result = dup2(targetFD, 1);
+			if (result == -1) {
+				perror("target dup2()");
+				exit(2);
+			}
+			
 		}
 		execvp(theCommands.regularCommands[0], theCommands.regularCommands);
 		//fflush(stdout);
