@@ -19,7 +19,15 @@ struct userCommands {
 	char outputFile[256];
 	char regularCommands[512][256];
 	int commandCount;
+	//int i;
+/*	for (i = 0; i < userCommands.commandCount; i++) {
+		userCommands.regularCommands[i] = 0;
+	}*/
 };
+
+
+
+
 // help with processInput code via Painless Programming: https://youtu.be/gnIxlT_40rU
 // and Dy Classroom: dyclassroom.com/c/c-function-returning-structure
 struct userCommands processInput(void);
@@ -166,14 +174,39 @@ struct userCommands processInput(void) {
 }
 
 void executeCommand(struct userCommands theCommands) {
-	while (1) {
+	// executing a program module:
+	int childStatus;
+	// filler until I get my commands working:
+	char* argument_list[] = { "ls", "-l", NULL };
+	// fork new process
+	pid_t spawnPid = fork();
+	printf("is this the thing? %s", theCommands.regularCommands[0]);
+
+	switch (spawnPid) {
+	case -1:
+		perror("fork()\n");
+		exit(1);
+		break;
+	case 0:
+		// replace current program with user's command
+		//execvp ? ? for theCommands.regularCommands[0];
+		//execl(theCommands.regularCommands[0], theCommands.regularCommands[0], NULL);
+		//execvp(theCommands.regularCommands[0], theCommands.regularCommands);
+		execvp(theCommands.regularCommands[0], argument_list);
+	default:
+		// in parent process, wait for child's termination:
+		spawnPid = waitpid(spawnPid, &childStatus, 0);
+		printf("PARENT(%d): child(%d) terminated. Exiting\n", getpid(), spawnPid);
+		exit(0);
+		break;
+	}
+	/*while (1) {
 		printf("accessing the struct? Input: %s\n", theCommands.inputFile);
 		printf("accessing the struct? Output: %s\n", theCommands.outputFile);
 		int i;
 		for (i = 0; i < theCommands.commandCount; i++) {
 			printf("accessing the struct? Commands: %s\n", theCommands.regularCommands[i]);
 		}
-	
 		break;
-	}
+	}*/
 }
