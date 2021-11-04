@@ -18,6 +18,7 @@ struct userCommands {
 	char inputFile[256];
 	char outputFile[256];
 	char regularCommands[512][256];
+	int commandCount;
 };
 // help with processInput code via Painless Programming: https://youtu.be/gnIxlT_40rU
 // and Dy Classroom: dyclassroom.com/c/c-function-returning-structure
@@ -57,7 +58,7 @@ struct userCommands processInput(void) {
 
 		char inputFile[256];
 		char outputFile[256];
-		int commandCount = 0;
+		//int commandCount = 0;
 		char regularCommands[512][256];
 
 		char cwd[256]; // var to hold current working directory
@@ -146,9 +147,9 @@ struct userCommands processInput(void) {
 						}
 						else {
 							printf("just a command!\n");
-							strcpy(currentCommands.regularCommands[commandCount], token);
-							printf("the command: %s\n", currentCommands.regularCommands[commandCount]);
-							commandCount++;
+							strcpy(currentCommands.regularCommands[currentCommands.commandCount], token);
+							printf("the command: %s\n", currentCommands.regularCommands[currentCommands.commandCount]);
+							currentCommands.commandCount++;
 						}
 						
 						token = strtok(NULL, " ");
@@ -169,13 +170,10 @@ void executeCommand(struct userCommands theCommands) {
 		printf("accessing the struct? Input: %s\n", theCommands.inputFile);
 		printf("accessing the struct? Output: %s\n", theCommands.outputFile);
 		int i;
-		for (i = 0; i < strlen(theCommands.regularCommands); i++) {
+		for (i = 0; i < theCommands.commandCount; i++) {
 			printf("accessing the struct? Commands: %s\n", theCommands.regularCommands[i]);
 		}
-		
-		printf("command stuff goes here\n");
-		printf("and here");
-		printf("here too!");
+	
 		break;
 	}
 }
