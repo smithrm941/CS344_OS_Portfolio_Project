@@ -7,7 +7,7 @@
 #include <signal.h>
 
 #define MAXCMDLINE 2049
-#define MAXARGS 512
+#define MAXARGS 513
 
 void handle_SIGINT(int signo) {
 	printf("\n");
@@ -17,7 +17,7 @@ void handle_SIGINT(int signo) {
 struct userCommands {
 	char inputFile[256];
 	char outputFile[256];
-	char regularCommands[512][256];
+	char* regularCommands[MAXARGS];
 	int commandCount;
 	//int i;
 /*	for (i = 0; i < userCommands.commandCount; i++) {
@@ -67,7 +67,7 @@ struct userCommands processInput(void) {
 		char inputFile[256];
 		char outputFile[256];
 		//int commandCount = 0;
-		char regularCommands[512][256];
+		char regularCommands[MAXARGS][256];
 
 		char cwd[256]; // var to hold current working directory
 		int status; // var for exit status
@@ -138,6 +138,13 @@ struct userCommands processInput(void) {
 
 				// handle if something besides cd is typed:
 				else {
+					// initializing "regularCommands" with NULL:
+					int i;
+					for (i = 0; i < MAXARGS; i++) {
+						currentCommands.regularCommands[i] = NULL;
+						printf("did this work?? %s\n", currentCommands.regularCommands[i]);
+					}
+
 					//token = strtok(NULL, " ");
 					while (token != NULL) {
 						printf("what is the current token? %s\n", token);
@@ -155,7 +162,7 @@ struct userCommands processInput(void) {
 						}
 						else {
 							printf("just a command!\n");
-							strcpy(currentCommands.regularCommands[currentCommands.commandCount], token);
+							currentCommands.regularCommands[currentCommands.commandCount] = token;
 							printf("the command: %s\n", currentCommands.regularCommands[currentCommands.commandCount]);
 							currentCommands.commandCount++;
 						}
@@ -180,7 +187,6 @@ void executeCommand(struct userCommands theCommands) {
 	char* argument_list[] = { "ls", "-l", NULL };
 	// fork new process
 	pid_t spawnPid = fork();
-	printf("is this the thing? %s", theCommands.regularCommands[0]);
 
 	switch (spawnPid) {
 	case -1:
@@ -192,7 +198,7 @@ void executeCommand(struct userCommands theCommands) {
 		//execvp ? ? for theCommands.regularCommands[0];
 		//execl(theCommands.regularCommands[0], theCommands.regularCommands[0], NULL);
 		//execvp(theCommands.regularCommands[0], theCommands.regularCommands);
-		execvp(theCommands.regularCommands[0], argument_list);
+		execvp(theCommands.regularCommands[0], theCommands.regularCommands);
 	default:
 		// in parent process, wait for child's termination:
 		spawnPid = waitpid(spawnPid, &childStatus, 0);
