@@ -13,9 +13,16 @@ void handle_SIGINT(int signo) {
 	printf("\n");
 }
 
+
+struct userCommands {
+	char inputFile[256];
+	char outputFile[256];
+	char regularCommands[512][256];
+};
 // help with processInput code via Painless Programming: https://youtu.be/gnIxlT_40rU
-void processInput();
-void executeCommand();
+// and Dy Classroom: dyclassroom.com/c/c-function-returning-structure
+struct userCommands processInput(void);
+void executeCommand(struct userCommands);
 
 
 int main() {
@@ -31,23 +38,18 @@ int main() {
 	char command[256];
 	char backgroundProcess[256];
 
-	processInput();
-	executeCommand();
+
+	struct userCommands theCommands = processInput();
+	executeCommand(theCommands);
 		
 }
 
-void processInput() {
+struct userCommands processInput(void) {
 	int processingInput = 1;
 	while (processingInput == 1) {
 		printf(": ");
 
 		char userInput[MAXARGS];
-
-		struct userCommands {
-			char inputFile[256];
-			char outputFile[256];
-			char regularCommands[512][256];
-		};
 
 		// declaring a struct to hold our variables to pass to command execution function:
 		struct userCommands currentCommands;
@@ -158,12 +160,19 @@ void processInput() {
 			token = strtok(NULL, " ");
 		}
 		processingInput = 0;
-
+		return currentCommands;
 	}
 }
 
-void executeCommand() {
+void executeCommand(struct userCommands theCommands) {
 	while (1) {
+		printf("accessing the struct? Input: %s\n", theCommands.inputFile);
+		printf("accessing the struct? Output: %s\n", theCommands.outputFile);
+		int i;
+		for (i = 0; i < strlen(theCommands.regularCommands); i++) {
+			printf("accessing the struct? Commands: %s\n", theCommands.regularCommands[i]);
+		}
+		
 		printf("command stuff goes here\n");
 		printf("and here");
 		printf("here too!");
