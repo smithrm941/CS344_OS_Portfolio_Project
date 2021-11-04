@@ -7,37 +7,37 @@
 #include <signal.h>
 #include <fcntl.h>
 
+// making room for null terminator in command line and list of arguments
 #define MAXCMDLINE 2049
 #define MAXARGS 513
 
+// signal handler ignoring CTRL C
 void handle_SIGINT(int signo) {
 	printf("\n");
+	fflush(stdout);
 }
 
+// signal handler ignoring CTRL Z
 void handle_SIGTSTP(int signo) {
-	printf("do something!");
+	printf("\n");
+	fflush(stdout);
 }
 
-
+// storage for smallsh user's choices
 struct userCommands {
 	char inputFile[256];
 	char outputFile[256];
-	char* regularCommands[MAXARGS];
-	int commandCount;
-//	int backgroundProcess;
-
+	char* userArguments[MAXARGS];
+	int argumentCount;
 };
 
 
-
-
+// defining functions for procesing smallsh user's input and executing commands
 // help with processInput code via Painless Programming: https://youtu.be/gnIxlT_40rU
 // and Dy Classroom: dyclassroom.com/c/c-function-returning-structure
 struct userCommands processInput(void);
-void executeCommand(struct userCommands);
-int status = 0; // var for exit status
-
-//void handle_SIG
+void executeCommands(struct userCommands);
+int status = 0;
 
 
 int main() {
@@ -58,37 +58,37 @@ int main() {
 	SIGTSTP_action.sa_flags = 0;
 	sigaction(SIGTSTP, &SIGTSTP_action, NULL);
 
-
+	// process input and execute commands:
 	struct userCommands theCommands = processInput();
-	executeCommand(theCommands);
-		
+	executeCommands(theCommands);
 }
 
+
+// defining function that takes input from smallsh user and processes it depeding on input values
+// immediately acting on input or storing it in a struct of arguments to be executed
 struct userCommands processInput(void) {
 	int processingInput = 1;
 	while (processingInput == 1) {
 		printf(": ");
-
+		fflush(stdout);
 		char userInput[MAXARGS];
 
-		// declaring a struct to hold our variables to pass to command execution function:
+		// declaring instance of previously defined struct to hold variables to pass to command execution function:
 		struct userCommands currentCommands;
-		// ******************************************************************************
 
+		// the variables to pass to command execution function
 		char inputFile[256];
 		char outputFile[256];
-		//int commandCount = 0;
-		char regularCommands[MAXARGS][256];
+		char userArguments[MAXARGS][256];
 
 		char cwd[256]; // var to hold current working directory
-		char* newDirectory; // var for usr chosen directory
-		pid_t spawnpid = -5;
-		char* token;
+		char* newDirectory; // var for user chosen directory
+		char* token; // variable for manipulating input string
 
-		// use fgets to fill the argument variable with user inputs:
+		// use fgets to create string of user inputs:
 		fgets(userInput, MAXCMDLINE, stdin);
 
-		// remove trailing new line from before passing token to chdir:
+		// remove trailing new line from user input:
 		// code found on stack overflow:
 		userInput[strlen(userInput) - 1] = 0;
 
@@ -111,11 +111,9 @@ struct userCommands processInput(void) {
 
 		// print status value if user types "status"
 		else if (strcmp(userInput, "status") == 0) {
-			// PLACEHOLDER - signal of last terminating process here
-			// otherwise if before any foreground process is run:
 			status = 0;
 			printf("exit value %d\n", status);
-			fflush(stdin);
+			fflush(stdout);
 		}
 
 		// handling everything else other than blank lines, comments, "exit" and "status":
@@ -123,7 +121,6 @@ struct userCommands processInput(void) {
 
 			// breaking user input into tokens seperated by space
 			token = strtok(userInput, " ");
-			//token[strlen(token) - 1] = 0;
 			while (token != NULL) {
 
 				// built-in function for changing directory within smallsh:
@@ -131,66 +128,68 @@ struct userCommands processInput(void) {
 					// if user types another word beisdes cd, try to go to directory with that name:
 					token = strtok(NULL, " ");
 					while (token != NULL) {
+						// changing $$ in directory names to parent pid:
+						int i;
+						int parentPid = getpid();
+						char parentPidStr[256];
+						sprintf(parentPidStr, "%d", parentPid);
+						int usedPidVariable = 0;
+						for (i = 0; i < strlen(token); i++) {
+							if (token[i] == '$' && token[i + 1] == '$') {
+								token[i + 1] = '\0';
+								token[i] = '\0';
+								usedPidVariable = 1;
+							}
+						}
+						if (usedPidVariable == 1) {
+							strcat(token, parentPidStr);
+						}
 
 						// move to chosen directory or print error message:
 						if (chdir(token) == 0) {
-							printf("pwd: %s\n", getcwd(cwd, 256));
 							token = strtok(NULL, " ");
 							main();
 						}
 						else {
 
 							printf("Directory not found\n");
+							fflush(stdout);
 							main();
 						}
 					}
 					// if cd is typed without chosen directory, go to the home directory:
 					chdir(getenv("HOME"));
-					printf("pwd: %s\n", getcwd(cwd, 256));
 					main();
 				}
 
-				// handle if something besides cd is typed:
+				// handle if something besides "cd" is typed:
 				else {
-					// initializing "regularCommands" with NULL:
+					// initializing "userArguments" with NULL to ensure there is null terminator at end of arguments:
 					int i;
 					for (i = 0; i < MAXARGS; i++) {
-						currentCommands.regularCommands[i] = NULL;
+						currentCommands.userArguments[i] = NULL;
 					}
 
-					//token = strtok(NULL, " ");
 					while (token != NULL) {
-						//printf("what is the current token? %s\n", token);
 						if (strcmp(token, "<") == 0) {
-							printf("next one is input file!\n");
 							token = strtok(NULL, " ");
 							strcpy(currentCommands.inputFile, token);
-							printf("the input file: %s\n", currentCommands.inputFile);
 						}
 						else if (strcmp(token, ">")  == 0) {
-							printf("next one is output file!\n");
 							token = strtok(NULL, " ");
 							strcpy(currentCommands.outputFile, token);
-							printf("the output file: %s\n", currentCommands.outputFile);
 						}
-						/*else if (strcmp(token, "&") == 0) {
-							printf("do the background thing!");
-							currentCommands.backgroundProcess = 1;
-							token = strtok(NULL, " ");
-						}*/
 						else {
-						//	printf("just a command!\n");
-							currentCommands.regularCommands[currentCommands.commandCount] = token;
-							currentCommands.commandCount++;
+							currentCommands.userArguments[currentCommands.argumentCount] = token;
+							currentCommands.argumentCount++;
 						}
+						// changing $$ in arguments to parent pid:
 						int i;
 						int parentPid = getpid();
 						char parentPidStr[256];
 						sprintf(parentPidStr, "%d", parentPid);
 						int usedPidVariable = 0;
-						//char* parentPidStr = sprintf("%s", parentPid);
 						for (i = 0; i < strlen(token); i++) {
-							//printf("letter from token: %c\n", token[i]);
 							if (token[i] == '$' && token[i + 1] == '$') {
 								token[i + 1] = '\0';
 								token[i] = '\0';
@@ -202,10 +201,7 @@ struct userCommands processInput(void) {
 							token = strtok(NULL, " ");
 						}
 						token = strtok(NULL, " ");
-
-						
 					}
-					
 				}
 			}
 			token = strtok(NULL, " ");
@@ -215,73 +211,78 @@ struct userCommands processInput(void) {
 	}
 }
 
-void executeCommand(struct userCommands theCommands) {
-	// executing a program module:
+// defining function that takes arguments from user input and executes them
+void executeCommands(struct userCommands theCommands) {
 	int childStatus;
-
 	// fork new process
 	pid_t spawnPid = fork();
 
 	switch (spawnPid) {
-	case -1:
+	case -1: // error on fork
 		perror("fork()\n");
+		status = 1;
+		printf("exit value %d\n", status);
 		exit(1);
 		break;
-	case 0:
+	case 0: // no error on fork
+
+		// code to redirect stdin to source file if "<" was in user's input:
 		if (theCommands.inputFile[0] != '\0') {
-			printf("we have an input file!\n");
 			// code from prcesses and I/O module
 			int sourceFD = open(theCommands.inputFile, O_RDONLY);
 			if (sourceFD == -1) {
 				perror("source open()");
 				status = 1;
 				printf("exit value %d\n", status);
+				fflush(stdout);
 				exit(1);
 			}
-			// Written to terminal
-			printf("sourceFD == %d\n", sourceFD);
 
-			// Redirect stdin to source file
 			int result = dup2(sourceFD, 0);
 			if (result == -1) {
 				perror("source dup2()");
 				status = 2;
 				printf("exit value %d\n", status);
+				fflush(stdout);
 				exit(2);
 			}
 		}
 		
+		// code to redirect stdout to source file if ">" was in user's input:
 		if (theCommands.outputFile[0] != '\0') {
-			printf("we have an output file!\n");
 			// code from processes and I/O module
 			int targetFD = open(theCommands.outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 			if (targetFD == -1) {
 				perror("target open()");
 				status = 1;
 				printf("exit value %d\n", status);
+				fflush(stdout);
 				exit(1);
 			}
-			printf("targetFD == %d\n", targetFD); // written to terminal
 
-			// Redirect stdout to target file
 			int result = dup2(targetFD, 1);
 			if (result == -1) {
 				perror("target dup2()");
 				status = 2;
 				printf("exit value %d\n", status);
+				fflush(stdout);
 				exit(2);
 			}
 			
 		}
-		execvp(theCommands.regularCommands[0], theCommands.regularCommands);
+
+		// if not redirecting input or output, just execute commands as usual:
+		execvp(theCommands.userArguments[0], theCommands.userArguments);
 		perror("execvp()");
+		status = 1;
+		printf("exit value %d\n", status);
+		fflush(stdout);
 		exit(1);
-		//fflush(stdout);
+
 	default:
-		// in parent process, wait for child's termination:
+		// in parent process, wait for child's termination before running again:
 		spawnPid = waitpid(spawnPid, &childStatus, 0);
-		// something about signals here?
-		//printf("PARENT(%d): child(%d) terminated. Exiting\n", getpid(), spawnPid);
+		fflush(stdin);
 		main();
 	}
 }
